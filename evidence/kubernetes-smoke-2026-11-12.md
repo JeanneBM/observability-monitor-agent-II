@@ -1,4 +1,4 @@
-# Live kube-apiserver smoke — 2026-11-12
+# Kubernetes smoke tests — 2026-11-12
 
 Verdict: **PASS**. Same script as the CI `kubernetes` job:
 `ENVTEST_BIN=… scripts/apiserver-smoke.sh`.
@@ -52,9 +52,15 @@ CA:
 For comparison, `kubectl get --raw .../pods/diagnostic-0/exec` with the same token was
 denied by the server: `cannot get resource "pods/exec"`.
 
-## Not covered here
+## Kind smoke (real pod logs) — PASS
 
-- Reading real pod logs, the image, restricted Pod Security admission of the running pod and
-  the in-cluster transport inside a pod: the
-  [kind smoke workflow](../.github/workflows/kind-smoke.yml), which has to be run once
-  manually (Actions → Kind smoke → Run workflow).
+[Run 43206471820](https://github.com/JeanneBM/observability-monitor-agent-II/actions/runs/43206471820),
+commit `00e74b8`: the image built from this repository, loaded into kind and deployed with
+`kubectl apply -k deploy/kubernetes` (Pod Security `restricted`, read-only root filesystem,
+projected token, NetworkPolicy). Two fixture agents printed 10 canonical envelopes between
+ordinary log lines; the diagnostic one called `kubectl_patch`.
+
+The monitor, using the in-cluster transport, reported source `aks` as `watching` with agents
+`diagnostic` and `remediation`, 2 pods, 0 rejected records, and exactly one open incident:
+`permission_violation|diagnostic|smoke-1|tool:kubectl_patch`. The remediation agent's run
+(approval, patch, claim, verification) produced none.

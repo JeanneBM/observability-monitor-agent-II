@@ -236,9 +236,9 @@ whole 24 h window diluted sudden jumps (now the latest `drift.window_runs` runs)
 | 179 tests on Python 3.11 to 3.14, branch coverage at least 90% (currently 95%) | CI `test` |
 | evaluation on 20 seeds, report uploaded as an artifact | CI `evaluate` |
 | manifests rendered and validated with kubeconform `-strict` | CI `kubernetes` |
-| live kube-apiserver + etcd (envtest): manifests accepted, RBAC matrix, both transports with a real ServiceAccount token, TLS verification, local path guard | CI `kubernetes`, [`scripts/apiserver-smoke.sh`](scripts/apiserver-smoke.sh), [evidence](evidence/apiserver-smoke-2026-11-12.md) |
+| live kube-apiserver + etcd (envtest): manifests accepted, RBAC matrix, both transports with a real ServiceAccount token, TLS verification, local path guard | CI `kubernetes`, [`scripts/apiserver-smoke.sh`](scripts/apiserver-smoke.sh), [evidence](evidence/kubernetes-smoke-2026-11-12.md) |
 | image builds, runs as UID 10001 with a read-only filesystem | CI `image` |
-| kind: image + restricted PSA + in-cluster transport + real pod logs, expects exactly the injected violation | [`kind-smoke`](.github/workflows/kind-smoke.yml), manual and weekly |
+| kind: image + restricted PSA + in-cluster transport + real pod logs, expects exactly the injected violation | [`kind-smoke`](.github/workflows/kind-smoke.yml), manual and weekly ([first run](evidence/kubernetes-smoke-2026-11-12.md#kind-smoke-real-pod-logs--pass)) |
 
 Every action is pinned to a commit SHA, downloaded binaries are checked against SHA-256
 checksums, and workflows run with `contents: read` only. Dependabot updates actions, Python
