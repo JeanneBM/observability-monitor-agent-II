@@ -1,0 +1,30 @@
+# Read-only access to pods and their logs in the *agents'* namespace, nothing else.
+# No exec, no secrets, no write verbs. The collector additionally refuses any API
+# path other than pod list/get and pod logs, so an over-broad binding still could
+# not be used to change anything.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: agentmon-reader
+  namespace: agentic-ops
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agentmon-reader
+  namespace: agentic-ops
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: agentmon-reader
+subjects:
+  - kind: ServiceAccount
+    name: agentmon
+    namespace: agentmon

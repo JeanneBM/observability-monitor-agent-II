@@ -1,0 +1,58 @@
+# Two fake agents that print canonical event envelopes to stdout, between ordinary
+# log lines. The diagnostic agent commits a permission violation (kubectl_patch).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fixture-agent
+  namespace: agentic-ops
+data:
+  emit.sh: |
+    #!/bin/sh
+    now=$(date +%s)
+    emit() {
+      echo "{\"agent_monitor_event\":{\"id\":\"$ROLE-$1\",\"ts\":$now,\"agent\":\"$ROLE\",\"run_id\":\"smoke-1\",\"type\":\"$2\"$3}}"
+    }
+    echo "starting $ROLE (ordinary log line, ignored by the monitor)"
+    emit 1 run_started ""
+    if [ "$ROLE" = diagnostic ]; then
+      emit 2 tool_call ',"tool":"kubectl_get","args_hash":"a1"'
+      emit 3 tool_call ',"tool":"kubectl_patch","args_hash":"b2"'
+      emit 4 run_finished ',"status":"success"'
+    else
+      emit 2 policy_authorized ',"tool":"kubectl_patch","attrs":{"approver":"smoke"}'
+      emit 3 tool_call ',"tool":"kubectl_patch","args_hash":"c3"'
+      emit 4 claim ',"status":"fixed","attrs":{"claim_id":"c"}'
+      emit 5 verification ',"status":"ok","attrs":{"claim_id":"c","verifier":"rollout"}'
+      emit 6 run_finished ',"status":"success"'
+    fi
+    exec sleep 86400
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: diagnostic-0
+  namespace: agentic-ops
+  labels: {app: agentic-ops, role: diagnostic}
+spec:
+  containers:
+    - name: agent
+      image: busybox:1.37
+      command: ["sh", "/fixture/emit.sh"]
+      env: [{name: ROLE, value: diagnostic}]
+      volumeMounts: [{name: fixture, mountPath: /fixture}]
+  volumes: [{name: fixture, configMap: {name: fixture-agent}}]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: remediation-0
+  namespace: agentic-ops
+  labels: {app: agentic-ops, role: remediation}
+spec:
+  containers:
+    - name: agent
+      image: busybox:1.37
+      command: ["sh", "/fixture/emit.sh"]
+      env: [{name: ROLE, value: remediation}]
+      volumeMounts: [{name: fixture, mountPath: /fixture}]
+  volumes: [{name: fixture, configMap: {name: fixture-agent}}]

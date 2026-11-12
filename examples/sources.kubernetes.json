@@ -1,0 +1,18 @@
+{
+  "instance": "aks-agentic-ops",
+  "policy": "policy.json",
+  "retentionHours": 24,
+  "sources": [
+    {
+      "type": "kubernetes",
+      "name": "aks",
+      "namespace": "agentic-ops",
+      "selector": "app=agentic-ops",
+      "agentLabel": "role",
+      "expectedAgents": ["diagnostic", "remediation"],
+      "transport": "kubectl",
+      "kubeconfig": "readonly-kubeconfig.yaml",
+      "credentialExpiresAt": "2026-12-31T00:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - serviceaccount.yaml
+  - rbac.yaml
+  - pvc.yaml
+  - networkpolicy.yaml
+  - deployment.yaml
+configMapGenerator:
+  - name: agentmon-config
+    namespace: agentmon
+    files:
+      - config.json
+      - policy.json
+images:
+  - name: agentmon
+    newName: agentmon
+    newTag: 0.1.0

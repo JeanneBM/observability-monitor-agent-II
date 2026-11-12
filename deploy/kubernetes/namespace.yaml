@@ -1,0 +1,8 @@
+# The monitor runs in its own namespace, separate from the agents it observes.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: agentmon
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest

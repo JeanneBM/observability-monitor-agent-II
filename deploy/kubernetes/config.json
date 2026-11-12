@@ -1,0 +1,17 @@
+{
+  "instance": "aks-agentic-ops",
+  "policy": "policy.json",
+  "retentionHours": 24,
+  "incidentResolveCycles": 2,
+  "sources": [
+    {
+      "type": "kubernetes",
+      "name": "aks",
+      "transport": "in-cluster",
+      "namespace": "agentic-ops",
+      "selector": "app=agentic-ops",
+      "agentLabel": "role",
+      "expectedAgents": ["diagnostic", "remediation"]
+    }
+  ]
+}

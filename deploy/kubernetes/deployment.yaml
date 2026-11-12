@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agentmon
+  namespace: agentmon
+  labels:
+    app.kubernetes.io/name: agentmon
+spec:
+  replicas: 1  # single writer: SQLite state on a ReadWriteOnce volume
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: agentmon
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: agentmon
+    spec:
+      serviceAccountName: agentmon
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: agentmon
+          image: agentmon:0.1.0
+          imagePullPolicy: IfNotPresent
+          args: ["watch", "--config", "/etc/agentmon/config.json", "--state", "/var/lib/agentmon"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {memory: 256Mi}
+          startupProbe:
+            exec:
+              command: ["agentmon", "health", "--state", "/var/lib/agentmon", "--max-age", "120"]
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:  # alive = heartbeat is fresh; a degraded source is not a reason to restart
+            exec:
+              command: ["agentmon", "health", "--state", "/var/lib/agentmon", "--max-age", "120"]
+            periodSeconds: 30
+          volumeMounts:
+            - {name: config, mountPath: /etc/agentmon, readOnly: true}
+            - {name: state, mountPath: /var/lib/agentmon}
+            - {name: tmp, mountPath: /tmp}
+            - {name: token, mountPath: /var/run/secrets/kubernetes.io/serviceaccount, readOnly: true}
+      volumes:
+        - name: config
+          configMap:
+            name: agentmon-config
+        - name: state
+          persistentVolumeClaim:
+            claimName: agentmon-state
+        - name: tmp
+          emptyDir: {sizeLimit: 16Mi}
+        - name: token  # short-lived, audience-bound, rotated by the kubelet
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  expirationSeconds: 3600
+              - configMap:
+                  name: kube-root-ca.crt
+                  items: [{key: ca.crt, path: ca.crt}]

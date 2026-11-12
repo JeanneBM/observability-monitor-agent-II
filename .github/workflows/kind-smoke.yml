@@ -1,0 +1,72 @@
+# End-to-end on a real cluster: image, restricted Pod Security, RBAC, in-cluster
+# transport and pod-log collection. Manual and weekly, because it builds an image
+# and starts a cluster.
+name: Kind smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 4 * * 1"
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash  # -eo pipefail, so "| tee" cannot hide a failure
+
+jobs:
+  kind:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: helm/kind-action@ea822c7bf1874f08e5a491df991c228edffc3376 # v1.15.2
+        with:
+          cluster_name: agentmon-smoke
+      - name: Build and load the image
+        run: |
+          docker build -t agentmon:0.1.0 .
+          kind load docker-image agentmon:0.1.0 --name agentmon-smoke
+      - name: Start fixture agents
+        run: |
+          kubectl create namespace agentic-ops
+          kubectl apply -f deploy/kind/fixtures.yaml
+          kubectl -n agentic-ops wait --for=condition=Ready pod --all --timeout=120s
+      - name: Deploy the monitor
+        run: |
+          kubectl apply -k deploy/kubernetes
+          kubectl -n agentmon rollout status deploy/agentmon --timeout=180s
+      - name: Expect exactly the injected violation
+        run: |
+          for _ in $(seq 1 30); do
+            kubectl -n agentmon exec deploy/agentmon -- \
+              agentmon incidents --state /var/lib/agentmon --json > incidents.json || true
+            kubectl -n agentmon exec deploy/agentmon -- \
+              cat /var/lib/agentmon/health.json > health.json || true
+            if python3 - <<'PY'
+          import json, sys
+          incidents = json.load(open("incidents.json"))
+          health = json.load(open("health.json"))
+          keys = sorted(i["key"] for i in incidents)
+          source = health["sources"]["aks"]
+          print(keys, source)
+          ok = (keys == ["permission_violation|diagnostic|smoke-1|tool:kubectl_patch"]
+                and source["status"] == "watching"
+                and source["agents"] == ["diagnostic", "remediation"]
+                and health["events"] == 10)
+          sys.exit(0 if ok else 1)
+          PY
+            then exit 0; fi
+            sleep 5
+          done
+          kubectl -n agentmon logs deploy/agentmon
+          exit 1
+      - name: Diagnostics
+        if: failure()
+        run: |
+          kubectl get pods -A
+          kubectl -n agentmon describe pod
+          kubectl -n agentmon logs deploy/agentmon --tail=200 || true

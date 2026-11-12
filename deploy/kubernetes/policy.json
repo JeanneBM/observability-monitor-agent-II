@@ -1,0 +1,52 @@
+{
+  "agents": {
+    "diagnostic": {
+      "allowed_tools": [
+        "kubectl_get",
+        "kubectl_describe",
+        "kubectl_logs",
+        "acr_check"
+      ],
+      "max_identical_calls": 3,
+      "max_tool_calls_per_run": 30,
+      "max_tokens_per_run": 20000
+    },
+    "remediation": {
+      "allowed_tools": [
+        "acr_check",
+        "kubectl_patch",
+        "rollout_status"
+      ],
+      "require_approval_for": [
+        "kubectl_patch"
+      ],
+      "max_identical_calls": 3,
+      "max_tool_calls_per_run": 20,
+      "max_tokens_per_run": 20000,
+      "require_verification": true
+    },
+    "rag": {
+      "allowed_tools": [
+        "retrieve"
+      ],
+      "max_identical_calls": 3,
+      "max_tokens_per_run": 12000,
+      "require_citations": true
+    },
+    "ci-repair": {
+      "allowed_tools": [
+        "policy_check",
+        "fixture_validation",
+        "draft_export"
+      ],
+      "max_tokens_per_run": 50000
+    }
+  },
+  "drift": {
+    "window_runs": 20,
+    "min_runs": 10,
+    "escalation_delta": 0.25,
+    "tool_calls_ratio": 2.0,
+    "significance": 0.001
+  }
+}

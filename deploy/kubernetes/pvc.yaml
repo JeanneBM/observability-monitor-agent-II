@@ -1,0 +1,11 @@
+# Event store, cursors and the incident ledger survive restarts.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: agentmon-state
+  namespace: agentmon
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi

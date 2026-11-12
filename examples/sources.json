@@ -1,0 +1,11 @@
+{
+  "instance": "local-lab",
+  "policy": "policy.json",
+  "stateDir": "../state",
+  "retentionHours": 24,
+  "incidentResolveCycles": 2,
+  "sources": [
+    {"type": "jsonl", "name": "rag", "path": "../telemetry/rag.jsonl", "agent": "rag"},
+    {"type": "jsonl", "name": "ci", "path": "../telemetry/ci-repair.jsonl", "agent": "ci-repair"}
+  ]
+}
