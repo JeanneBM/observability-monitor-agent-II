@@ -54,7 +54,7 @@ denied by the server: `cannot get resource "pods/exec"`.
 
 ## Kind smoke (real pod logs) — PASS
 
-[Run 43206471820](https://github.com/JeanneBM/observability-monitor-agent-II/actions/runs/43206471820),
+[Run 43206471820](https://github.com/JeanneBM/observability-monitor-agent-v2/actions/runs/43206471820),
 commit `00e74b8`: the image built from this repository, loaded into kind and deployed with
 `kubectl apply -k deploy/kubernetes` (Pod Security `restricted`, read-only root filesystem,
 projected token, NetworkPolicy). Two fixture agents printed 10 canonical envelopes between

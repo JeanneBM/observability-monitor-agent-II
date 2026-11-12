@@ -1,6 +1,6 @@
-# Agent Monitor II
+# Agent Monitor v2
 
-[![CI](https://github.com/JeanneBM/observability-monitor-agent-II/actions/workflows/ci.yml/badge.svg)](https://github.com/JeanneBM/observability-monitor-agent-II/actions/workflows/ci.yml)
+[![CI](https://github.com/JeanneBM/observability-monitor-agent-v2/actions/workflows/ci.yml/badge.svg)](https://github.com/JeanneBM/observability-monitor-agent-v2/actions/workflows/ci.yml)
 
 A read-only monitor for AI-agent telemetry. It watches what agents **did** (tool calls,
 approvals, token use, claims and their verification, citations, escalations) and raises
